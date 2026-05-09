@@ -9,7 +9,7 @@ LONICERA_SELINUX=0
 DISTRO_UGLYNAME="zirconium"
 WORKDIR="/tmp/work"
 
-LIVE_ROOTFS="/var/home/tulip/opt/zirconium-dev/zirconium-liveiso-profiles/mkosi.output/Zirconium_20260505012630_x86-64"
+LIVE_ROOTFS="${1}"
 # LIVE_ROOTFS="${WORKDIR}/live-rootfs"
 EFI_PARTFS="${WORKDIR}/efi-part"
 ISO_ROOTFS="${WORKDIR}/iso-rootfs"
@@ -23,8 +23,10 @@ stat "${LIVE_ROOTFS}/usr/bin/bash"
 stat "${LIVE_ROOTFS}/usr/lib/systemd/systemd"
 
 mkdir -p "${ISO_ROOTFS}/LiveOS"
-sudo mksquashfs "${LIVE_ROOTFS}" "${ISO_ROOTFS}/LiveOS/squashfs.img" -all-root -noappend
-# mkfs.erofs -d0 --quiet --all-root -zlz4hc,6 -Eall-fragments,fragdedupe=inode -C1048576 iso-root/LiveOS/squashfs.img embedded-rootfs
+# sudo mksquashfs "${LIVE_ROOTFS}" "${ISO_ROOTFS}/LiveOS/squashfs.img" -all-root -noappend
+# https://fedoraproject.org/wiki/Changes/EROFSforLiveMedia
+sudo mkfs.erofs  --force-uid=0 --force-gid=0 -zlzma,6 -Eall-fragments,fragdedupe=inode -C1048576 "${ISO_ROOTFS}/LiveOS/squashfs.img" "${LIVE_ROOTFS}"
+# sudo mkfs.erofs -d0 --quiet --all-root -zlz4hc,6 -Eall-fragments,fragdedupe=inode -C1048576 "${ISO_ROOTFS}"/LiveOS/squashfs.img "${LIVE_ROOTFS}"
 
 install -Dpm0644 "${LIVE_ROOTFS}/usr/lib/systemd/boot/efi/systemd-bootx64.efi" "${EFI_PARTFS}/EFI/BOOT/BOOTX64.EFI"
 install -Dpm0644 -t "${EFI_PARTFS}/EFI/systemd/" "${LIVE_ROOTFS}/usr/lib/systemd/boot/efi/systemd-boot"*.efi
